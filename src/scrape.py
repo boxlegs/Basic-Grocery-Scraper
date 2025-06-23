@@ -38,11 +38,14 @@ def get_item_codes(path):
     """
     if not os.path.exists(path):
         if not path.isnumeric():
-            usage()
+            print(f"File {path} does not exist or is not a valid item code.")
+            exit(1)
         else:
             return [path]
     with open(path, 'r') as file:
+        print(f"Reading item codes from {path}")
         item_codes = file.read().splitlines()
+        print(f"Loaded {len(item_codes)} item codes.")
         return item_codes
     
     
@@ -94,7 +97,6 @@ def get_item_prices(session: requests.Session, item_codes: list):
     for item_code in item_codes:
         item_code = item_code.strip()
         if not item_code.isnumeric():
-            print(f"Skipping invalid item code: {item_code}")
             continue
         item = get_item(session, item_code)
         items.append(item)
@@ -120,7 +122,7 @@ def build_notification_content(sale_items: list):
     """
     content = "The following items are on sale:\n\n"
     for item in sale_items:
-        content += f"{item.name} - ${item.current_price} (was ${item.prev_price})\n"
+        content += f"{item.name} is on sale: {item.how_much()}% off, now ${item.current_price} (was ${item.prev_price})\n"
     return content
 
 if __name__ == "__main__":
@@ -131,18 +133,25 @@ if __name__ == "__main__":
     
 
     args = parser.parse_args()
-    item_codes = args.codes.strip()
+    item_codes = get_item_codes(args.codes)    
     ntfy_url = args.url.strip() if args.url else None
     
     # Establish session
     session = establish_session()
-    print(f"Loaded {len(item_codes)} item codes.")
     items = get_item_prices(session, item_codes)
     sale_items = get_sale_items(items)
     
-    # Todo
-    # if len(sale_items) != 0 and ntfy_url:
-    #     build_notification_content(sale_items)
+    
+    
+    if len(sale_items) != 0 and ntfy_url:
+        notify.publish_notification(
+            url=ntfy_url,
+            content=build_notification_content(sale_items),
+            title=f"Woolworths Sale Alert - {len(sale_items)} Items on Sale",
+            priority="urgent",
+            tags="green_apple"
+        )
+        print("Notification sent successfully.")
                         
     
 
