@@ -8,6 +8,7 @@ import notify
 # Globals
 BASE_URL = "http://www.woolworths.com.au/"
 API_ENDPOINT = "apis/ui/product/detail/"
+DEFAULT_NTFY_URL = "https://ntfy.sh/"
 
 class Item:
     def __init__(self, code, name, prev_price, current_price, imgurl=None):
@@ -147,7 +148,10 @@ if __name__ == "__main__":
     item_groups = {}
 
     args = parser.parse_args()
-    ntfy_url = args.url.strip() if args.url else None
+    ntfy_url = args.url.strip() if args.url else DEFAULT_NTFY_URL
+    ntfy_url += "/" if ntfy_url[-1] != "/" else ""
+    
+    
     groups = get_item_codes(args.codes)    
     
     # Establish session
@@ -164,7 +168,7 @@ if __name__ == "__main__":
     
         if len(sale_items) != 0 and ntfy_url:
             notify.publish_notification(
-                url=ntfy_url+group,
+                url=ntfy_url + group,
                 content=build_notification_content(sale_items),
                 title=f"Woolworths Sale Alert - {len(sale_items)} {groups} Items on Sale",
                 priority="urgent",
