@@ -170,7 +170,7 @@ if __name__ == "__main__":
             notify.publish_notification(
                 url=ntfy_url + group,
                 content=build_notification_content(sale_items),
-                title=f"Woolworths Sale Alert - {len(sale_items)} {groups} Items on Sale",
+                title=f"Woolworths Sale Alert - {len(sale_items)} {group} Items on Sale",
                 priority="urgent",
                 tags="green_apple"
             )
