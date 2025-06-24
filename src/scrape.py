@@ -50,7 +50,7 @@ def get_item_codes(path):
             if not line:
                 continue
             if line.split()[0].startswith("[") and line.split()[0].endswith("]"): # If [LABEL]
-                current_label = line[1:-1]
+                current_label = line.split()[0][1:-1]
                 groups[current_label] = []
             elif current_label:
                 groups[current_label].append(line.split()[0])
