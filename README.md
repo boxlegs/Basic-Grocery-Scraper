@@ -16,7 +16,7 @@ python3 scrape.py -u http://ntfy.sh/sale codes.txt
 
 This is the format for the input file that contains codes. Codes should be listen line by line and under a group label. The group labels (e.g. `[group]`) are used to specify the `ntfy` topic endpoint. For example, notifications for items under `[coffee]` will be sent to `https://ntfy.sh/coffee` (or whatever `ntfy` server you've specified. Since this tool parses only the first space-delimited item per line, you can use comments to keep track of what each item code is, etc.
 
-```toml
+```
 [coffee]
 254695
 111111
