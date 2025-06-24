@@ -11,3 +11,21 @@ git clone https://github.com/boxlegs/WooliesSalescraper.git
 cd WooliesSalescraper
 python3 scrape.py -u http://ntfy.sh/sale codes.txt
 ```
+
+### InFile format
+
+This is the format for the input file that contains codes. Codes should be listen line by line and under a group label. The group labels (e.g. `[group]`) are used to specify the `ntfy` topic endpoint. For example, notifications for items under `[coffee]` will be sent to `https://ntfy.sh/coffee` (or whatever `ntfy` server you've specified. Since this tool parses only the first space-delimited item per line, you can use comments to keep track of what each item code is, etc.
+
+```txt
+[coffee]
+254695
+[treats] # Support for comments!
+826731 # Red Doritos 
+```
+
+## To Do
+There are various improvements I'm considering to make this more customisable
+
+- Custom `ntfy` tags for each topic
+- Custom sale %-based notification thresholds - either global or per-item
+- _maybe_ support for Coles (assuming I can figure out their product API)
