@@ -8,8 +8,6 @@ import notify
 # Globals
 BASE_URL = "http://www.woolworths.com.au/"
 API_ENDPOINT = "apis/ui/product/detail/"
-item_code = '254695' # Vittoria Oro 
-
 
 class Item:
     def __init__(self, code, name, prev_price, current_price, imgurl=None):
@@ -37,16 +35,31 @@ def get_item_codes(path):
     Reads item codes from a file or a single item code from stdin.
     """
     if not os.path.exists(path):
-        if not path.isnumeric():
-            print(f"File {path} does not exist or is not a valid item code.")
-            exit(1)
-        else:
-            return [path]
+        print(f"File {path} does not exist.")
+        exit(1) 
+    
     with open(path, 'r') as file:
+        
+        groups = {}
+        current_label = None
+
         print(f"Reading item codes from {path}")
-        item_codes = file.read().splitlines()
-        print(f"Loaded {len(item_codes)} item codes.")
-        return item_codes
+        
+        for line in file:
+            line = line.strip()
+            if not line:
+                continue
+            if line.split()[0].startswith("[") and line.split()[0].endswith("]"): # If [LABEL]
+                current_label = line[1:-1]
+                groups[current_label] = []
+            elif current_label:
+                groups[current_label].append(line.split()[0])
+            else:
+                print(f"Item code {line} found without a valid label. Please add a label in square brackets (without spaces) like so:\n [LABEL]\n 123456\n123456")
+                exit(1)
+                
+        print(f"Loaded {sum([(len(items)) for items in groups.values()])} item codes from {len(groups.keys())} groups.")
+        return groups
     
     
     
@@ -131,27 +144,35 @@ if __name__ == "__main__":
     parser.add_argument("codes", help="Numeric item code or file containing item codes to scrape.")
     parser.add_argument("-u", "--url", help="URL for the ntfy server")
     
+    item_groups = {}
 
     args = parser.parse_args()
-    item_codes = get_item_codes(args.codes)    
     ntfy_url = args.url.strip() if args.url else None
+    groups = get_item_codes(args.codes)    
     
     # Establish session
     session = establish_session()
-    items = get_item_prices(session, item_codes)
-    sale_items = get_sale_items(items)
+    
+    for group, codes in groups.items():
+    
+        if not codes: # Empty group (e.g. label with no items)
+            continue
+
+        print(f"Processing group: {group.upper()}...", end=None)
+        items = get_item_prices(session, codes)
+        sale_items = get_sale_items(items)
+    
+        if len(sale_items) != 0 and ntfy_url:
+            notify.publish_notification(
+                url=ntfy_url+group,
+                content=build_notification_content(sale_items),
+                title=f"Woolworths Sale Alert - {len(sale_items)} {groups} Items on Sale",
+                priority="urgent",
+                tags="green_apple"
+            )
+            print(f"Notification sent to {ntfy_url+group} successfully.")
     
     
-    
-    if len(sale_items) != 0 and ntfy_url:
-        notify.publish_notification(
-            url=ntfy_url,
-            content=build_notification_content(sale_items),
-            title=f"Woolworths Sale Alert - {len(sale_items)} Items on Sale",
-            priority="urgent",
-            tags="green_apple"
-        )
-        print("Notification sent successfully.")
                         
     
 
