@@ -1,14 +1,11 @@
 import requests
 import os
-import sys
-import json
 import argparse
-import notify
+from python_ntfy import NtfyClient
 
 # Globals
 BASE_URL = "http://www.woolworths.com.au/"
 API_ENDPOINT = "apis/ui/product/detail/"
-DEFAULT_NTFY_URL = "https://ntfy.sh/"
 
 class Item:
     def __init__(self, code, name, prev_price, current_price, imgurl=None):
@@ -16,7 +13,7 @@ class Item:
         self.name = name
         self.prev_price = prev_price
         self.current_price = current_price 
-        self.imgurl = imgurl
+        self.imgurl = imgurl # Todo: add images
         
     def __str__(self):
         return f"+{(len(self.name)+ 6) * '-'}+" + f"\nName: {self.name}\nItem Code: {self.code}\nPrice: {self.current_price}\nOn Sale: {self.on_sale()}"
@@ -147,13 +144,13 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
     parser.add_argument("codes", help="Numeric item code or file containing item codes to scrape.")
-    parser.add_argument("-u", "--url", help="URL for the ntfy server")
+    parser.add_argument("-u", "--url", help="URL for the ntfy server. If not supplied, https://ntfy.sh is used by default.")
     parser.add_argument("-m", "--markdown", help="Enable markdown formatting in notifications. Note markdown is not supported on the iOS app.", action="store_true")
     
     item_groups = {}
 
     args = parser.parse_args()
-    ntfy_url = args.url.strip() if args.url else DEFAULT_NTFY_URL
+    ntfy_url = args.url.strip() if args.url else "https://ntfy.sh/"
     ntfy_url += "/" if ntfy_url[-1] != "/" else ""
     markdown = args.markdown
     
@@ -172,14 +169,14 @@ if __name__ == "__main__":
         sale_items = get_sale_items(items)
     
         if len(sale_items) != 0 and ntfy_url:
-            notify.publish_notification(
-                url=ntfy_url + group,
-                content=build_notification_content(sale_items, markdown=markdown),
-                title=f"Woolworths Sale Alert - {len(sale_items)} {group} Items on Sale",
-                priority="urgent",
-                tags="green_apple",
-                markdown=markdown
-            )
+            
+            client = NtfyClient(server=ntfy_url, topic=group)
+            client.send(build_notification_content(sale_items, markdown=markdown),
+                        f"Woolworths Sale Alert - {len(sale_items)} {group} Items on Sale",
+                        priority=client.MessagePriority.HIGH,
+                        tags=["green_apple"],
+                        format_as_markdown=markdown)
+            
             print(f"Notification sent to {ntfy_url+group} successfully.")
     
     
