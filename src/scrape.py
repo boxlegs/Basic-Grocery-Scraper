@@ -130,13 +130,17 @@ def get_sale_items(items: list):
     print(f"Found {len(sale_items)} target items on sale.")
     return sale_items
 
-def build_notification_content(sale_items: list):
+
+def build_notification_content(sale_items: list, markdown: bool):
     """
     Builds the content for the notification based on the sale items.
     """
     content = "The following items are on sale:\n\n"
     for item in sale_items:
-        content += f"- **{item.name}** is on sale: {item.how_much()}% off, now ${item.current_price} (*was ${item.prev_price}*)\n"
+        if markdown:
+            content += f"- **{item.name}** is on sale: {item.how_much()}% off, now ${item.current_price} (*was ${item.prev_price}*)\n"
+        else:
+            content += f"- {item.name} is on sale: {item.how_much()}% off, now ${item.current_price} (was ${item.prev_price})\n"
     return content
 
 if __name__ == "__main__":
@@ -170,7 +174,7 @@ if __name__ == "__main__":
         if len(sale_items) != 0 and ntfy_url:
             notify.publish_notification(
                 url=ntfy_url + group,
-                content=build_notification_content(sale_items),
+                content=build_notification_content(sale_items, markdown=markdown),
                 title=f"Woolworths Sale Alert - {len(sale_items)} {group} Items on Sale",
                 priority="urgent",
                 tags="green_apple",
