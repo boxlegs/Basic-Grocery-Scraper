@@ -9,7 +9,8 @@ Using this tool is pretty easy. You just need to clone the repository and supply
 ```sh
 git clone https://github.com/boxlegs/WooliesSalescraper.git
 cd WooliesSalescraper
-python3 scrape.py -u http://ntfy.sh/ codes.txt
+pip install -r requirements.txt
+python3 scrape.py -u http://ntfy.sh codes.txt
 ```
 
 ### InFile format
