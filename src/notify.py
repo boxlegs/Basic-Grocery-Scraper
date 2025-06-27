@@ -1,6 +1,6 @@
 import requests
 
-def publish_notification(url, content, title, priority, tags):
+def publish_notification(url, content, title, priority, tags, markdown=False):
     """
     Publishes a notification to the ntfy server specified by url.  
     """
@@ -10,7 +10,7 @@ def publish_notification(url, content, title, priority, tags):
         "Title": title,
         "Priority": priority,
         "Tags": tags,
-        "Markdown": "yes" # Not yet implemented in ntfy
+        "Markdown": "yes" if markdown else "no" # Not yet implemented in ntfy
     })
     
     if req.status_code != 200:

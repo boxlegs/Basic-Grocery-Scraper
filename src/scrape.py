@@ -136,7 +136,7 @@ def build_notification_content(sale_items: list):
     """
     content = "The following items are on sale:\n\n"
     for item in sale_items:
-        content += f"{item.name} is on sale: {item.how_much()}% off, now ${item.current_price} (was ${item.prev_price})\n"
+        content += f"- **{item.name}** is on sale: {item.how_much()}% off, now ${item.current_price} (*was ${item.prev_price}*)\n"
     return content
 
 if __name__ == "__main__":
@@ -144,13 +144,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("codes", help="Numeric item code or file containing item codes to scrape.")
     parser.add_argument("-u", "--url", help="URL for the ntfy server")
+    parser.add_argument("-m", "--markdown", help="Enable markdown formatting in notifications. Note markdown is not supported on the iOS app.", action="store_true")
     
     item_groups = {}
 
     args = parser.parse_args()
     ntfy_url = args.url.strip() if args.url else DEFAULT_NTFY_URL
     ntfy_url += "/" if ntfy_url[-1] != "/" else ""
-    
+    markdown = args.markdown
     
     groups = get_item_codes(args.codes)    
     
@@ -170,9 +171,10 @@ if __name__ == "__main__":
             notify.publish_notification(
                 url=ntfy_url + group,
                 content=build_notification_content(sale_items),
-                title=f"Woolworths Sale Alert - {len(sale_items)} {groups} Items on Sale",
+                title=f"Woolworths Sale Alert - {len(sale_items)} {group} Items on Sale",
                 priority="urgent",
-                tags="green_apple"
+                tags="green_apple",
+                markdown=markdown
             )
             print(f"Notification sent to {ntfy_url+group} successfully.")
     
